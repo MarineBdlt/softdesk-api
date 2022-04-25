@@ -56,7 +56,7 @@ contributor_router = routers.NestedSimpleRouter(router, r"project", lookup="proj
 contributor_router.register("contributor", ContributorViewSet, basename="contributor")
 
 comment_router = routers.NestedSimpleRouter(issue_router, r"issue", lookup="issue")
-contributor_router.register("comment", CommentViewSet, basename="comment")
+comment_router.register("comment", CommentViewSet, basename="comment")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -64,34 +64,8 @@ urlpatterns = [
     path("api/", include(router.urls)),
     path("api/", include(issue_router.urls)),
     path("api/", include(contributor_router.urls)),
+    path("api/", include(comment_router.urls)),
     path("api/signup/", SignupView.as_view(), name="signup"),
     path("api/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("login/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    # path(
-    #     r"^project/(?P<project_pk>\d+)/issue/?$",
-    #     IssueViewSet.as_view({"get": "list"}),
-    #     name="library-book-list",
-    # ),
 ]
-
-# from rest_framework_nested import routersrouter = SimpleRouter()
-
-# path(r'^project/(?P<project_pk>\d+)/issue/?$', IssueViewSet.as_view(), name='library-book-list')# Pourquoi ne pas les mettre dans le router ?
-# router.register('libraries', views.LibraryViewSet)book_router = routers.NestedSimpleRouter(
-#     router,
-#     r'libraries',
-#     lookup='library')book_router.register(
-#     r'books',
-#     views.BookViewSet,
-#     basename='library-book'
-# )app_name = 'library'urlpatterns = [
-#     path('', include(router.urls)),
-#     path('', include(book_router.urls)),
-# ]
-
-
-# path(
-#     "ticket-detail/<int:ticket_id>",
-#     flux.views.ticket_detail,
-#     name="ticket_detail"
-# ),

@@ -14,7 +14,6 @@ class Contributor(models.Model):
     project_id = models.ForeignKey(
         "softdesk_api.Project", on_delete=models.CASCADE, related_name="project"
     )
-    # permission = models.Choices()
 
     def __str__(self):
         return str(self.user_id)
@@ -56,7 +55,7 @@ admin.site.register(Project, ProjectAdmin)
 
 
 class Issue(models.Model):
-    # issue_id = models.IntegerField(primary_key=True)
+
     title = models.CharField(max_length=255)
     desc = models.CharField(max_length=1000)
     project_id = models.ForeignKey(
@@ -116,7 +115,7 @@ class Comments(models.Model):
     created_time = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return self.comment_id, self.issue_id
+        return self.description
 
 
 class CommentsAdmin(admin.ModelAdmin):

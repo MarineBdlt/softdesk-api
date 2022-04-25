@@ -14,6 +14,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from softdesk_api.models import Project, Issue, Comments, Contributor
 from django.contrib.auth.models import User
+from django.db.models import Q
 from softdesk_api import serializers
 
 # rajouter permissions ;)
@@ -44,9 +45,17 @@ class ProjectViewSet(ModelViewSet):
         return super().get_serializer_class()
 
     def get_queryset(self):
-        return Project.objects.filter(author_user_id=self.request.user.id)
+        contributors = Contributor.objects.filter(user_id=self.request.user.id)
+        return Project.objects.filter(
+            Q(author_user_id__in=contributors.values_list("user_id"))
+            | Q(author_user_id=self.request.user.id)
+        )
+
+    # A TESTER
 
     # OU CONTRIBUTOR -> REGARDER SI PAIR PROJET- USER DANS TABLE CONTRIBUTOR
+    # SI PAIR PROJET -USER DANS CLASS CONTRIBUTOR
+    # FILTRER LES PROJETS AVEC AUTHOR_USER_ID = USER_ID DE CONTRIBUTOR
     # UTILISER L'ORM __
     # Q pour OU
 
@@ -65,7 +74,6 @@ class ContributorViewSet(ModelViewSet):
     post_serializer_class = serializers.ContributorPostSerializer
 
     def get_serializer_class(self):
-        # Si l'action demandée est retrieve nous retournons le serializer de détail
         if self.action in ("create", "uptdate"):
             return self.post_serializer_class
         return super().get_serializer_class()
@@ -89,12 +97,16 @@ class IssueViewSet(ModelViewSet):
     http_method_names = ["get", "post", "put", "delete"]
     queryset = Issue.objects.all()
 
-    serializer_class = serializers.IssueGetSerializer
+    serializer_class = serializers.IssueGetListSerializer
+    detail_serializer_class = serializers.IssueGetDetailSerializer
     post_serializer_class = serializers.IssuePostSerializer
 
     def get_serializer_class(self):
         if self.action in ("create", "uptdate"):
             return self.post_serializer_class
+        else:
+            if self.action == "retrieve":
+                return self.detail_serializer_class
         return super().get_serializer_class()
 
     def get_queryset(self, *args, **kwargs):
