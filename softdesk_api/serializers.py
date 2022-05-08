@@ -12,7 +12,7 @@ from softdesk_api.models import Project, Issue, Contributor, Comments
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email"]
+        fields = ["id", "username"]
 
 
 class ProjectListSerializer(serializers.ModelSerializer):
@@ -23,6 +23,7 @@ class ProjectListSerializer(serializers.ModelSerializer):
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
     issues = serializers.SerializerMethodField()
+    contributors = serializers.SerializerMethodField()
     author_user_id = serializers.SerializerMethodField()
 
     class Meta:
@@ -34,9 +35,8 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             "type",
             "author_user_id",
             "issues",
+            "contributors",
         ]
-
-    # POURQUOI GET SEULEMENT L'ID ET PAS L'INSTANCE ?
 
     def get_author_user_id(self, instance):
         queryset = instance.author_user_id
@@ -49,8 +49,27 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             serializer = IssueGetListSerializer(queryset, many=True)
             return serializer.data
 
+    def get_contributors(self, instance):
+        queryset = Contributor.objects.filter(project_id=instance.project_id)
+        if queryset:
+            serializer = ContributorListSerializer(queryset, many=True)
+            return serializer.data
 
-class ContributorGetSerializer(serializers.ModelSerializer):
+
+class ContributorListSerializer(serializers.ModelSerializer):
+    user_id = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Contributor
+        fields = ["user_id"]
+
+    def get_user_id(self, instance):
+        queryset = instance.user_id
+        serializer = UserSerializer(queryset)
+        return serializer.data
+
+
+class ContributorDetailSerializer(serializers.ModelSerializer):
     project_id = serializers.SerializerMethodField()
     user_id = serializers.SerializerMethodField()
 
@@ -69,17 +88,11 @@ class ContributorGetSerializer(serializers.ModelSerializer):
         return serializer.data
 
 
-class ContributorPostSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Contributor
-        fields = ["user_id"]
-
-
 class IssueGetListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Issue
         fields = [
-            "project_id",
+            "id",
             "title",
             "tag",
         ]
@@ -87,23 +100,39 @@ class IssueGetListSerializer(serializers.ModelSerializer):
 
 class IssueGetDetailSerializer(serializers.ModelSerializer):
     author_user_id = serializers.SerializerMethodField()
+    assignee_user_id = serializers.SerializerMethodField()
+    comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Issue
         fields = [
+            "id",
             "project_id",
             "title",
             "desc",
             "tag",
             "priority",
             "status",
+            "author_user_id",
             "assignee_user_id",
+            "comments",
         ]
+
+    def get_author_user_id(self, instance):
+        queryset = instance.author_user_id
+        serializer = UserSerializer(queryset)
+        return serializer.data
 
     def get_assignee_user_id(self, instance):
         queryset = instance.assignee_user_id
         serializer = UserSerializer(queryset)
         return serializer.data
+
+    def get_comments(self, instance):
+        queryset = Comments.objects.filter(issue_id=instance.id)
+        if queryset:
+            serializer = CommentListSerializer(queryset, many=True)
+            return serializer.data
 
 
 class IssuePostSerializer(serializers.ModelSerializer):
@@ -119,33 +148,15 @@ class IssuePostSerializer(serializers.ModelSerializer):
         ]
 
 
-class IssueGetSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Issue
-        fields = [
-            "project_id",
-            "title",
-            "desc",
-            "tag",
-            "priority",
-            "status",
-            "assignee_user_id",
-            "created_time",
-        ]
-
-    def get_assignee_user_id(self, instance):
-        queryset = instance.assignee_user_id
-        serializer = UserSerializer(queryset)
-        return serializer.data
-
-
-class CommentPostSerializer(serializers.ModelSerializer):
+class CommentListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comments
         fields = ["comment_id", "description"]
 
 
-class CommentGetSerializer(serializers.ModelSerializer):
+class CommentDetailSerializer(serializers.ModelSerializer):
+    author_user_id = serializers.SerializerMethodField()
+
     class Meta:
         model = Comments
         fields = [
@@ -155,6 +166,11 @@ class CommentGetSerializer(serializers.ModelSerializer):
             "issue_id",
             "created_time",
         ]
+
+    def get_author_user_id(self, instance):
+        queryset = instance.author_user_id
+        serializer = UserSerializer(queryset)
+        return serializer.data
 
 
 class SignupSerializer(serializers.ModelSerializer):

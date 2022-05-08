@@ -69,3 +69,8 @@ urlpatterns = [
     path("api/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("login/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]
+
+
+# FAIRE CONDITION DANS LA VUE -> SI OBJECT ID EXISTE DEJA, NE PAS RECREER
+# AUTOMATISER L'AJOUT D'ID DANS LA CREATION DE PROJET? ISSUE? COMMENT
+# AFFICHER ROLE (CONTRIBUTOR OU CREATEUR)

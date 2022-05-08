@@ -1,7 +1,9 @@
 from http.client import NOT_FOUND
+from xml.etree.ElementTree import Comment
 from django.contrib.auth import get_user_model
 from django.http import request
 from django.shortcuts import get_object_or_404
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -16,6 +18,7 @@ from softdesk_api.models import Project, Issue, Comments, Contributor
 from django.contrib.auth.models import User
 from django.db.models import Q
 from softdesk_api import serializers
+from rest_framework import permissions
 
 # rajouter permissions ;)
 
@@ -31,9 +34,23 @@ class MyObtainTokenPairView(TokenObtainPairView):
     serializer_class = TokenObtainPairSerializer
 
 
+# WORK
+class IsAuthorInProjectView(permissions.BasePermission):
+    def has_permission(self, request, view):
+        # if view.action == "create":
+        #    return True
+        if view.action in ("destroy", "update"):
+            try:
+                content = Project.objects.get(pk=view.kwargs["pk"])
+            except ObjectDoesNotExist:
+                return False
+            return content.author_user_id == request.user
+        return True
+
+
 class ProjectViewSet(ModelViewSet):
     queryset = Project.objects.all()
-    # permission_classes = (AllowAny,)
+    permission_classes = (IsAuthorInProjectView,)
     http_method_names = ["get", "post", "put", "delete"]
 
     serializer_class = serializers.ProjectListSerializer
@@ -46,18 +63,17 @@ class ProjectViewSet(ModelViewSet):
 
     def get_queryset(self):
         contributors = Contributor.objects.filter(user_id=self.request.user.id)
+        projects = contributors.values_list("project_id")
+        print(projects)
         return Project.objects.filter(
-            Q(author_user_id__in=contributors.values_list("user_id"))
-            | Q(author_user_id=self.request.user.id)
+            Q(project_id__in=projects) | Q(author_user_id=self.request.user.id)
         )
 
-    # A TESTER
-
-    # OU CONTRIBUTOR -> REGARDER SI PAIR PROJET- USER DANS TABLE CONTRIBUTOR
-    # SI PAIR PROJET -USER DANS CLASS CONTRIBUTOR
-    # FILTRER LES PROJETS AVEC AUTHOR_USER_ID = USER_ID DE CONTRIBUTOR
-    # UTILISER L'ORM __
-    # Q pour OU
+        #  Person.objects.filter(personscore_set__name="Bob").prefetch_related("personscore_set"
+        # return Project.objects.filter(
+        #     Q(project_id_in=self.request.user.id)
+        #     | Q(author_user_id=self.request.user.id)
+        # )
 
     def perform_create(self, serializer):
         serializer.save(author_user_id=self.request.user)
@@ -70,8 +86,8 @@ class ContributorViewSet(ModelViewSet):
     http_method_names = ["get", "post", "put", "delete"]
     queryset = Contributor.objects.all()
 
-    serializer_class = serializers.ContributorGetSerializer
-    post_serializer_class = serializers.ContributorPostSerializer
+    serializer_class = serializers.ContributorDetailSerializer
+    post_serializer_class = serializers.ContributorListSerializer
 
     def get_serializer_class(self):
         if self.action in ("create", "uptdate"):
@@ -93,16 +109,32 @@ class ContributorViewSet(ModelViewSet):
         )
 
 
+# WORK
+class IsAuthorContributorInIssueView(permissions.BasePermission):
+    def has_permission(self, request, view):
+        # if view.action in ("list", "retrieve", "create", "destroy", "update"):
+        try:
+            content = Project.objects.get(pk=view.kwargs["project_pk"])
+        except ObjectDoesNotExist:
+            return False
+        is_contributor = Contributor.objects.filter(
+            project_id=view.kwargs["project_pk"]
+        ).filter(user_id=request.user.id)
+        if content.author_user_id == request.user or len(is_contributor) > 0:
+            return True
+        return False
+
+
 class IssueViewSet(ModelViewSet):
-    http_method_names = ["get", "post", "put", "delete"]
     queryset = Issue.objects.all()
+    permission_classes = (IsAuthorContributorInIssueView,)
 
     serializer_class = serializers.IssueGetListSerializer
     detail_serializer_class = serializers.IssueGetDetailSerializer
     post_serializer_class = serializers.IssuePostSerializer
 
     def get_serializer_class(self):
-        if self.action in ("create", "uptdate"):
+        if self.action in ("create", "update"):
             return self.post_serializer_class
         else:
             if self.action == "retrieve":
@@ -132,12 +164,47 @@ class IssueViewSet(ModelViewSet):
         )
 
 
+# Seuls les contributeurs peuvent créer (Create) et lire (Read)
+# les commentaires relatifs à un problème.
+# En outre, ils ne peuvent les actualiser (Update)
+# et les supprimer (Delete) que s'ils en sont les auteurs.
+class IsAuthorContributorInCommentView(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if view.action in ("list", "retrieve", "create"):
+            print("in first if")
+            print(request, view.kwargs)
+            try:
+                print(request, view.kwargs)
+                is_contributor = Contributor.objects.filter(
+                    project_id=view.kwargs["project_pk"]
+                ).filter(user_id=request.user.id)
+                print(is_contributor)
+
+            except ObjectDoesNotExist:
+                print("Does not exists")
+                return False
+
+            if len(is_contributor) > 0:
+                return True
+
+        if view.action in ("destroy", "update"):
+            ("in second if")
+            print(request, view.kwargs)
+            try:
+                comment = Comments.objects.get(comment_id=view.kwargs["pk"])
+            except ObjectDoesNotExist:
+                return False
+            return comment.author_user_id == request.user
+        return False
+
+
 class CommentViewSet(ModelViewSet):
     http_method_names = ["get", "post", "put", "delete"]
     queryset = Comments.objects.all()
+    permission_classes = (IsAuthorContributorInCommentView,)
 
-    serializer_class = serializers.CommentGetSerializer
-    post_serializer_class = serializers.CommentPostSerializer
+    serializer_class = serializers.CommentDetailSerializer
+    post_serializer_class = serializers.CommentListSerializer
 
     def get_serializer_class(self):
         if self.action in ("create", "uptdate"):

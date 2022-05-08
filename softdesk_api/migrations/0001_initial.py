@@ -20,7 +20,6 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('user_id', models.IntegerField()),
                 ('project_id', models.IntegerField()),
-                ('role', models.CharField(max_length=100)),
             ],
         ),
         migrations.CreateModel(
