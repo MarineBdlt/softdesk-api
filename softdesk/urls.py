@@ -26,26 +26,6 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework import routers
 from rest_framework_nested import routers
 
-# 1 - UNE INSCRIPTION QUI FONCTIONNE
-# voir comment s'identifier avec jwt : créer un endpoint pour signup : un serializer, une view pour faire une requete post genericApiView
-# la methode register avec appeler le serializer, une fois que c'est fait -> save, set_password qui permet d'hacher le mot de passe
-
-# 2 - LOGIN ET RECUP TOKEN
-
-# 3 - ROUTER DE PROJECT
-# quelles sont les données qu'on demande et qu'on remplies automatiquement ?
-# faire router, l'ajouter dans les urls, models viewset avec le CRUD juste pour projet pour commencer
-
-# permissions, QUI A LE DROIT DE FAIRE QUOI ?
-# 1. Author, 2. Contributor, 3. Anonyme
-
-# Ici nous créons notre routeur
-
-# Puis lui déclarons une url basée sur le mot clé ‘category’ et notre view
-# afin que l’url générée soit celle que nous souhaitons ‘/api/category/’
-# router = routers.SimpleRouter()
-# router.register("signup", SignupAPIView, basename="signup")
-
 router = routers.SimpleRouter()
 router.register("project", ProjectViewSet, basename="project")
 
@@ -60,17 +40,17 @@ comment_router.register("comment", CommentViewSet, basename="comment")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api-auth/", include("rest_framework.urls")),
-    path("api/", include(router.urls)),
-    path("api/", include(issue_router.urls)),
-    path("api/", include(contributor_router.urls)),
-    path("api/", include(comment_router.urls)),
-    path("api/signup/", SignupView.as_view(), name="signup"),
-    path("api/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("login/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("", include(router.urls)),
+    path("", include(issue_router.urls)),
+    path("", include(contributor_router.urls)),
+    path("", include(comment_router.urls)),
+    path("signup/", SignupView.as_view(), name="signup"),
+    path("login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
 ]
 
 
 # FAIRE CONDITION DANS LA VUE -> SI OBJECT ID EXISTE DEJA, NE PAS RECREER
-# AUTOMATISER L'AJOUT D'ID DANS LA CREATION DE PROJET? ISSUE? COMMENT
-# AFFICHER ROLE (CONTRIBUTOR OU CREATEUR)
+# AUTOMATISER L'AJOUT D'ID DANS LA CREATION DE COMMENT -> ne correspond pas à celui rentré manuellement
+# Gestion des erreurs
+# Tests
+# DOCUMENTATION POSTMAN

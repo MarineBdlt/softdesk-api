@@ -1,5 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
-from softdesk_api.models import Project, Comments, Contributor
+from softdesk_api.models import Issue, Project, Comments, Contributor
 from rest_framework import permissions
 
 
@@ -16,16 +16,23 @@ class IsAuthorInProjectView(permissions.BasePermission):
 
 class IsAuthorContributorInIssueView(permissions.BasePermission):
     def has_permission(self, request, view):
-        try:
-            project = Project.objects.get(pk=view.kwargs["project_pk"])
-        except ObjectDoesNotExist:
+        if view.action in ("list", "retrieve", "create"):
+            try:
+                project = Project.objects.get(pk=view.kwargs["project_pk"])
+            except ObjectDoesNotExist:
+                return False
+            is_contributor = Contributor.objects.filter(
+                project_id=view.kwargs["project_pk"]
+            ).filter(user_id=request.user.id)
+            if project.author_user_id == request.user or bool(is_contributor):
+                return True
             return False
-        is_contributor = Contributor.objects.filter(
-            project_id=view.kwargs["project_pk"]
-        ).filter(user_id=request.user.id)
-        if project.author_user_id == request.user or bool(is_contributor):
-            return True
-        return False
+        if view.action in ("destroy", "update"):
+            try:
+                issue = Issue.objects.get(id=view.kwargs["pk"])
+            except ObjectDoesNotExist:
+                return False
+            return issue.author_user_id == request.user
 
 
 class IsAuthorContributorInCommentView(permissions.BasePermission):
@@ -34,7 +41,6 @@ class IsAuthorContributorInCommentView(permissions.BasePermission):
             try:
                 project = Project.objects.get(project_id=view.kwargs["project_pk"])
             except ObjectDoesNotExist:
-                print("Does not exists")
                 return False
             is_contributor = Contributor.objects.filter(
                 project_id=view.kwargs["project_pk"]
@@ -44,8 +50,6 @@ class IsAuthorContributorInCommentView(permissions.BasePermission):
                 return True
 
         if view.action in ("destroy", "update"):
-            ("in second if")
-            print(request, view.kwargs)
             try:
                 comment = Comments.objects.get(comment_id=view.kwargs["pk"])
             except ObjectDoesNotExist:

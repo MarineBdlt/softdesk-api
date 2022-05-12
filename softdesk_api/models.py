@@ -27,7 +27,7 @@ admin.site.register(Contributor, ContributorAdmin)
 
 
 class Project(models.Model):
-    project_id = models.IntegerField(primary_key=True)
+
     title = models.CharField(max_length=255)
     description = models.CharField(max_length=1000)
 
@@ -104,7 +104,6 @@ admin.site.register(Issue, IssueAdmin)
 
 class Comments(models.Model):
 
-    comment_id = models.IntegerField()
     description = models.CharField(max_length=1000)
     author_user_id = models.ForeignKey(
         to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="author"

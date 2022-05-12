@@ -151,7 +151,7 @@ class IssuePostSerializer(serializers.ModelSerializer):
 class CommentListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comments
-        fields = ["comment_id", "description"]
+        fields = ["description"]
 
 
 class CommentDetailSerializer(serializers.ModelSerializer):
