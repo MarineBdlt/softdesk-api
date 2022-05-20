@@ -3,10 +3,9 @@ from xml.etree.ElementTree import Comment
 from django.contrib.auth import get_user_model
 from django.http import request
 from django.shortcuts import get_object_or_404
-from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import (
+    IsAuthenticated,
+)  # ajouter permission sisAuthenticated
 
 from rest_framework import generics
 from rest_framework.viewsets import ModelViewSet
@@ -16,7 +15,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from softdesk_api import serializers
 from softdesk_api.models import Project, Issue, Comments, Contributor
-from django.contrib.auth.models import User
 from django.db.models import Q
 from softdesk_api import permissions as p
 
@@ -49,7 +47,7 @@ class ProjectViewSet(ModelViewSet):
         contributors = Contributor.objects.filter(user_id=self.request.user.id)
         projects = contributors.values_list("project_id")
         return Project.objects.filter(
-            Q(project_id__in=projects) | Q(author_user_id=self.request.user.id)
+            Q(id__in=projects) | Q(author_user_id=self.request.user.id)
         )
 
     def perform_create(self, serializer):
@@ -74,10 +72,10 @@ class ContributorViewSet(ModelViewSet):
     def get_queryset(self, *args, **kwargs):
         project_id = self.kwargs.get("project_pk")
         try:
-            project = Project.objects.get(project_id=project_id)
+            project = Project.objects.get(id=project_id)
         except Project.DoesNotExist:
             raise NOT_FOUND("A project with this id does not exist")
-        return self.queryset.filter(project_id=project.project_id)
+        return self.queryset.filter(project_id=project.id)
 
     def perform_create(self, serializer):
         project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
@@ -105,10 +103,10 @@ class IssueViewSet(ModelViewSet):
     def get_queryset(self, *args, **kwargs):
         project_id = self.kwargs.get("project_pk")
         try:
-            project = Project.objects.get(project_id=project_id)
+            project = Project.objects.get(id=project_id)
         except Project.DoesNotExist:
             raise NOT_FOUND("A project with this id does not exist")
-        return self.queryset.filter(project_id=project.project_id)
+        return self.queryset.filter(project_id=project.id)
         # remplacer par get_objects_404
 
     def perform_create(self, serializer):
@@ -134,20 +132,12 @@ class CommentViewSet(ModelViewSet):
     post_serializer_class = serializers.CommentListSerializer
 
     def get_serializer_class(self):
-        if self.action in ("create", "uptdate"):
+        if self.action in ("create", "update"):
             return self.post_serializer_class
         return super().get_serializer_class()
 
     def perform_create(self, serializer):
-        issue = get_object_or_404(Issue, pk=self.kwargs["issue_pk"])
         serializer.save(
             author_user_id=self.request.user,
-            issue_id=issue,
+            issue_id=self.kwargs["issue_pk"],
         )
-
-        # PROJECT QUERY DRAFT
-        #  Person.objects.filter(personscore_set__name="Bob").prefetch_related("personscore_set"
-        # return Project.objects.filter(
-        #     Q(project_id_in=self.request.user.id)
-        #     | Q(author_user_id=self.request.user.id)
-        # )

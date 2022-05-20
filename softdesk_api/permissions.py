@@ -18,7 +18,7 @@ class IsAuthorContributorInIssueView(permissions.BasePermission):
     def has_permission(self, request, view):
         if view.action in ("list", "retrieve", "create"):
             try:
-                project = Project.objects.get(pk=view.kwargs["project_pk"])
+                project = Project.objects.get(id=view.kwargs["project_pk"])
             except ObjectDoesNotExist:
                 return False
             is_contributor = Contributor.objects.filter(
@@ -38,20 +38,23 @@ class IsAuthorContributorInIssueView(permissions.BasePermission):
 class IsAuthorContributorInCommentView(permissions.BasePermission):
     def has_permission(self, request, view):
         if view.action in ("list", "retrieve", "create"):
+            print("view action is list, retrieve, create")
             try:
-                project = Project.objects.get(project_id=view.kwargs["project_pk"])
+                project = Project.objects.get(id=view.kwargs["project_pk"])
             except ObjectDoesNotExist:
                 return False
             is_contributor = Contributor.objects.filter(
                 project_id=view.kwargs["project_pk"]
             ).filter(user_id=request.user.id)
 
+            print(request.user, request.user.id, project.author_user_id)
+
             if project.author_user_id == request.user or bool(is_contributor):
                 return True
 
         if view.action in ("destroy", "update"):
             try:
-                comment = Comments.objects.get(comment_id=view.kwargs["pk"])
+                comment = Comments.objects.get(id=view.kwargs["pk"])
             except ObjectDoesNotExist:
                 return False
             return comment.author_user_id == request.user
