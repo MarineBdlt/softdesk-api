@@ -144,7 +144,8 @@ class CommentViewSet(ModelViewSet):
         return super().get_serializer_class()
 
     def perform_create(self, serializer):
+        issue = get_object_or_404(Issue, pk=self.kwargs["issue_pk"])
         serializer.save(
             author_user_id=self.request.user,
-            issue_id=self.kwargs["issue_pk"],
+            issue_id=issue,
         )
