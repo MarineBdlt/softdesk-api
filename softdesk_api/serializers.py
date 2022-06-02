@@ -15,10 +15,22 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id", "username"]
 
 
+class UserDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+        ]
+
+
 class ProjectListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ["title", "description", "type", "author_user_id"]
+        fields = ["id", "title", "description", "type"]
 
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
@@ -29,6 +41,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = [
+            "id",
             "title",
             "description",
             "type",
@@ -60,7 +73,7 @@ class ContributorListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contributor
-        fields = ["user_id"]
+        fields = ["id", "user_id"]
 
     def get_user_id(self, instance):
         queryset = instance.user_id
@@ -78,12 +91,12 @@ class ContributorDetailSerializer(serializers.ModelSerializer):
 
     def get_project_id(self, instance):
         queryset = instance.project_id
-        serializer = ProjectDetailSerializer(queryset)
+        serializer = ProjectListSerializer(queryset)
         return serializer.data
 
     def get_user_id(self, instance):
         queryset = instance.user_id
-        serializer = UserSerializer(queryset)
+        serializer = UserDetailSerializer(queryset)
         return serializer.data
 
 

@@ -32,8 +32,8 @@ router.register("project", ProjectViewSet, basename="project")
 issue_router = routers.NestedSimpleRouter(router, r"project", lookup="project")
 issue_router.register("issue", IssueViewSet, basename="issue")
 
-contributor_router = routers.NestedSimpleRouter(router, r"project", lookup="project")
-contributor_router.register("contributor", ContributorViewSet, basename="contributor")
+users_router = routers.NestedSimpleRouter(router, r"project", lookup="project")
+users_router.register("users", ContributorViewSet, basename="users")
 
 comment_router = routers.NestedSimpleRouter(issue_router, r"issue", lookup="issue")
 comment_router.register("comment", CommentViewSet, basename="comment")
@@ -42,7 +42,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include(router.urls)),
     path("", include(issue_router.urls)),
-    path("", include(contributor_router.urls)),
+    path("", include(users_router.urls)),
+    # path("", include(contributor_router.urls)),
     path("", include(comment_router.urls)),
     path("signup/", SignupView.as_view(), name="signup"),
     path("login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),

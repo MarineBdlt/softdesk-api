@@ -15,6 +15,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from softdesk_api import serializers
 from softdesk_api.models import Project, Issue, Comments, Contributor
+from django.contrib.auth.models import User
 from django.db.models import Q
 from softdesk_api import permissions as p
 
@@ -62,11 +63,11 @@ class ContributorViewSet(ModelViewSet):
     queryset = Contributor.objects.all()
 
     serializer_class = serializers.ContributorDetailSerializer
-    post_serializer_class = serializers.ContributorListSerializer
+    list_serializer_class = serializers.ContributorListSerializer
 
     def get_serializer_class(self):
-        if self.action in ("create", "uptdate"):
-            return self.post_serializer_class
+        if self.action in ("list", "create", "update"):
+            return self.list_serializer_class
         return super().get_serializer_class()
 
     def get_queryset(self, *args, **kwargs):
@@ -79,9 +80,15 @@ class ContributorViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
-        serializer.save(
-            project_id=project,
-        )
+        user = get_object_or_404(User, pk=self.request.data["user_id"])
+
+        serializer.save(project_id=project, user_id=user)
+
+    def perform_update(self, serializer):
+        project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
+        user = get_object_or_404(User, pk=self.request.data["user_id"])
+
+        serializer.save(project_id=project, user_id=user)
 
 
 class IssueViewSet(ModelViewSet):
