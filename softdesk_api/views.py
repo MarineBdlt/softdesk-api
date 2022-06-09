@@ -1,5 +1,5 @@
-from http.client import NOT_FOUND
-from xml.etree.ElementTree import Comment
+from email import message
+from http.client import NOT_FOUND, INTERNAL_SERVER_ERROR, UNAUTHORIZED
 from django.contrib.auth import get_user_model
 from django.http import request
 from django.shortcuts import get_object_or_404
@@ -60,6 +60,7 @@ class ProjectViewSet(ModelViewSet):
 
 class ContributorViewSet(ModelViewSet):
     http_method_names = ["get", "post", "put", "delete"]
+    permission_classes = (p.IsAuthorInContributorView,)
     queryset = Contributor.objects.all()
 
     serializer_class = serializers.ContributorDetailSerializer
@@ -75,20 +76,18 @@ class ContributorViewSet(ModelViewSet):
         try:
             project = Project.objects.get(id=project_id)
         except Project.DoesNotExist:
-            raise NOT_FOUND("A project with this id does not exist")
+            raise Exception("A project with this id does not exist.")
         return self.queryset.filter(project_id=project.id)
 
     def perform_create(self, serializer):
         project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
-        user = get_object_or_404(User, pk=self.request.data["user_id"])
-
-        serializer.save(project_id=project, user_id=user)
-
-    def perform_update(self, serializer):
-        project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
-        user = get_object_or_404(User, pk=self.request.data["user_id"])
-
-        serializer.save(project_id=project, user_id=user)
+        user = get_object_or_404(User, pk=self.request.GET["user_id"])
+        if self.queryset.filter(project_id=project, user_id=user).exists():
+            raise Exception(
+                "This contribution already exists (%s: %s)." % (project, user)
+            )
+        else:
+            serializer.save(project_id=project, user_id=user)
 
 
 class IssueViewSet(ModelViewSet):
@@ -124,9 +123,10 @@ class IssueViewSet(ModelViewSet):
         )
 
     def perform_update(self, serializer):
+        project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
         serializer.save(
             author_user_id=self.request.user,
-            project_id=self.kwargs["project_pk"],
+            project_id=project,
         )
 
 
