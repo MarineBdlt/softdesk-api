@@ -1,0 +1,496 @@
+FORMAT: 1A
+HOST: http://127.0.0.1:8000/
+
+# Softdesk
+
+Softdesk is a simple API allowing to trace and track technical problems (issue tracking system). 
+This solution is aimed at B2B customers. 
+
+## Registration [/signup]
+
+### Registration [POST]
+
+You may create your own project using this action. It takes a JSON
+object containing a username, a password, same password for password2, an email, first name and last name. 
+Your password must contain at least 8 characters.
+
++ Request (application/json)
+
+        {
+        "username": "jack",
+        "password": jack6565
+        "password2": jack6565
+        "email": "jack@sparrow.com",
+        "first_name": "Jack",
+        "last_name": "Sparrow"
+        }
+
++ Response 201 (application/json)
+
+    + Headers
+
+            Location: /signup/
+
+    + Body
+
+        {
+        "username": "jack",
+        "email": "jack@sparrow.com",
+        "first_name": "Jack",
+        "last_name": "Sparrow"
+        }
+
+## Login [/login]
+
+### Login [POST]
+
+
+You may log to the api with this action. It takes a JSON object containing a username and your password.
+You obtains a token access to get data, you have to put the access token to headers of following requests.
++ Request (application/json)
+
+    {
+        "username": "jack",
+        "password": jack6565
+    }
+
++ Response 200 (application/json)
+
+    + Headers
+
+            Location: /login/
+
+    + Body
+
+    {
+    "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTY1NDI2MTk2NSwianRpIjoiMjQzMTg1NjYyMDdiNGM2MWE5NTM4NmRmYjliZTIxNDAiLCJ1c2VyX2lkIjo0fQ.hl3s8bu_4f6hNB31wh2VkS5WgRk7MjgfR99JKYV7sSs",
+    "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjU0MjYxOTY1LCJqdGkiOiI5ZjU0NGMwYTZiNmU0YTEzOTViYTNmY2I1MDIxYTIzZCIsInVzZXJfaWQiOjR9.Zt1BA5BibAn0r7yrpdp84Y6aqf1KAKXc5YU9biEoAGg"
+    }
+
+
+
+## Projects Collection [/projects]
+
+### List All Projects [GET]
+
++ Response 200 (application/json)
+
+{
+    "count": 3,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "title": "Création d'un jeu de stimulation cognitive.",
+            "description": "Exercices courts, tactiles, jouant sur le sentiment d'efficacité personnel et l'activation du circuit de récompense, déstiné aux personnes atteintes d'Alzheimer.",
+            "type": "AND",
+            "author_user_id": 2
+        },
+        {
+            "title": "Intégration des données",
+            "description": "Intégration des données du nouveau Client, pour peupler la base de données de sa session.",
+            "type": "BACK",
+            "author_user_id": 1
+        },
+        {
+            "title": "Interface graphique de l'authentification",
+            "description": "Interface en Angular HTML et CSS relative au parcours utilisateur d'inscription et de connexion à l'application.",
+            "type": "FRONT",
+            "author_user_id": 1
+        }
+    ]
+}
+
+### Detail of Project [GET]
+
++ Response 200 (application/json)
+
+{
+    "title": "Intégration des données",
+    "description": "Intégration des données du nouveau Client, pour peupler la base de données de sa session.",
+    "type": "BACK",
+    "author_user_id": {
+        "id": 1,
+        "username": "marineadmin"
+    },
+    "issues": [
+        {
+            "id": 1,
+            "title": "Données non conformes et incomplètes",
+            "tag": "BUG"
+        }
+    ],
+    "contributors": [
+        {
+            "user_id": {
+                "id": 2,
+                "username": "amstrong"
+            }
+        }
+    ]
+}
+
+### Create a New Project [POST]
+
+You may create your own project using this action. It takes a JSON
+object containing a title, a description and a type (BACK for Backend, FRONT for Frontend, IOS for Ios application, or AND for Android).
+
++ Request (application/json)
+
+        {
+        "title": "Softdesk API",
+        "description": "API allowing to trace and track technical problems (issue tracking system).",
+        "type": "BACK" ["ANDROID":"AND", "IOS":"IOS", "FRONTEND": "FRONT", "BACKEND": "BACK"]
+    }
+
++ Response 201 (application/json)
+
+    + Headers
+
+            Location: /projects/4
+
+    + Body
+
+        {   "id": 4,
+            "title": "Softdesk API",
+            "description": "API allowing to trace and track technical problems (issue tracking system).",
+            "type": "BACK",
+            "author_user_id": {
+                "id": 1,
+                "username": "marineadmin"
+            },
+            "issues": null,
+            "contributors": null
+        }
+        
+### Update Project [PUT]
+
+You may update your project using this action. 
+It takes a JSON object containing a title, a description and a type (BACK for Backend, FRONT for Frontend, IOS for Ios application, or AND for Android).
+
++ Request (application/json)
+
+        {
+        "title": "Softdesk project",
+        "description": "API allowing to trace and track technical problems (issue tracking system).",
+        "type": "FRONT" 
+    }
+
++ Response 201 (application/json)
+
+    + Headers
+
+            Location: /projects/4
+
+    + Body
+
+        {   
+            "id": 4,
+            "title": "Softdesk project",
+            "description": "API allowing to trace and track technical problems (issue tracking system).",
+            "type": "FRONT",
+            "author_user_id": {
+                "id": 1,
+                "username": "marineadmin"
+            },
+            "issues": null,
+            "contributors": null
+        }
+
+### Delete Project [DELETE]
+
+You may delete project using this action. 
+
++ Response 204 (No Content)
+
+## Users Collection [/project/1/users]
+
+### List All Users of Project [GET]
+
++ Response 200 (application/json)
+    
+        {
+        "count": 2,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "id": 2,
+                "user_id": {
+                    "id": 1,
+                    "username": "marineadmin"
+                }
+            },
+            {
+                "id": 5,
+                "user_id": {
+                    "id": 2,
+                    "username": "amstrong"
+                }
+            }
+        ]
+    }
+
+### Add User to a Project [POST]
+
+You may add a Contributor to a project with this action. 
+It takes a JSON object containing id of the user to add.
+
++ Request (application/json)
+
+        {
+        "user_id": "4",
+    }
+
++ Response 201 (application/json)
+
+    + Headers
+
+            Location: /projects/1/users/
+
+    + Body
+
+        {
+            "id": 7,
+            "user_id": {
+                "id": 4,
+                "username": "jack"
+        }
+    }
+
+
+### Delete User of a Project [DELETE]
+You may delete contributor using this action. 
+
++ Response 204 (No Content)
+
+## Issues Collection [/project/1/issue/]
+
+### List All Issues of Project [GET]
+
++ Response 200 (application/json)
+
+        {
+        "count": 3,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "id": 4,
+                "title": "Bug d'intégration des données",
+                "tag": "BUG"
+            },
+            {
+                "id": 5,
+                "title": "Page d'accueil non responsive",
+                "tag": "TASK"
+            },
+            {
+                "id": 6,
+                "title": "Ajouter un système de messagerie instantanée",
+                "tag": "AC"
+            }
+        ]
+    }
+
+### Detail Issue of Project 
+
++ Response 200 (application/json)
+    
+    {
+        "id": 4,
+        "project_id": 3,
+        "title": "Bug d'intégration des données",
+        "desc": "Le type int du budget ne correspond pas à la donnée. Changer les modèles et effectuer une migration",
+        "tag": "BUG",
+        "priority": "E",
+        "status": "TODO",
+        "author_user_id": 
+        {
+            "id": 1,
+            "username": "marineadmin"
+        },
+        "assignee_user_id": 
+        {
+            "id": 2,
+            "username": "amstrong"
+        },
+        "comments": null
+    }
+
+### Add Issue to a Project [POST]
+
+You may add an Issue to a project with this action. 
+It takes a JSON object containing title, description (desc), tag(BUG for Bug, AC for Amélioration continue, or TASK for Tâche), 
+priority(F for Faible, M for Moyenne, E for Elevée), status(TODO for To Do, CUR for Current, or DONE for Done), id of assignee user (assignee_user_id).
+
++ Request (application/json)
+
+        {
+        "title": "New bug",
+        "desc": "Description of new bug",
+        "tag": "BUG",
+        "priority": "E",
+        "status": "CUR",
+        "assignee_user_id": 2
+    }
+
++ Response 201 (application/json)
+
+    + Headers
+
+            Location: /projects/1/issue/
+
+    + Body
+
+        {
+        "title": "New bug",
+        "desc": "Description of new bug",
+        "tag": "BUG",
+        "priority": "E",
+        "status": "CUR",
+        "assignee_user_id": 2
+    }
+
+
+### Update Issue [POST]
+
+You may update an Issue to a project with this action. 
+It takes a JSON object containing title, description (desc), tag(BUG for Bug, AC for Amélioration continue, or TASK for Tâche), 
+priority(F for Faible, M for Moyenne, E for Elevée), status(TODO for To Do, CUR for Current, or DONE for Done), id of assignee user (assignee_user_id).
+
++ Request (application/json)
+
+        {
+        "title": "Change TITLE",
+        "desc": "Description of new bug",
+        "tag": "BUG",
+        "priority": "E",
+        "status": "CUR",
+        "assignee_user_id": 2
+    }
+
++ Response 201 (application/json)
+
+    + Headers
+
+            Location: /projects/1/issue/7/
+
+    + Body
+
+        {
+        "title": "Change TITLE",
+        "desc": "Description of new bug",
+        "tag": "BUG",
+        "priority": "E",
+        "status": "CUR",
+        "assignee_user_id": 2
+    }
+
+### Delete Issue [DELETE]
+
+You may delete issue using this action. 
+
++ Response 204 (No Content)
+
+## Comments Collection [/project/1/issue/4/comment/]
+
+### List All Comments of Issue [GET]
+
++ Response 200 (application/json)
+
+        {
+        "count": 2,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "id": 3,
+                "description": "Commentaire",
+                "author_user_id": {
+                    "id": 1,
+                    "username": "marineadmin"
+                },
+                "issue_id": 4,
+                "created_time": "2022-06-02T13:59:48Z"
+            },
+            {
+                "id": 4,
+                "description": "Problème de type sur le champ Véhicule de la table => changer int en str",
+                "author_user_id": {
+                    "id": 2,
+                    "username": "amstrong"
+                },
+                "issue_id": 4,
+                "created_time": "2022-06-02T14:00:06Z"
+            }
+        ]
+    }
+
+
+### Create Comment to an Issue [POST]
+
+You may add a Comment to an Issue with this action. 
+It takes a JSON object containing description.
+
++ Request (application/json)
+
+        {
+        "description": "Faut-il ajouter un champ date sur l'intervention ?"
+    }
+
+
++ Response 201 (application/json)
+
+    + Headers
+
+            Location: /projects/1/issue/4/comment
+
+    + Body
+
+        {
+        "description": "Faut-il ajouter un champ date sur l'intervention ?"
+    }
+
+### Get One Comment [GET]
+
++ Response 201 (application/json)
+
+    + Headers
+
+            Location: /projects/1/issue/7/comment/5/
+
+    + Body
+    
+        {
+        "description": "Faut-il ajouter un champ date sur l'intervention ?"
+    }
+
+### Update Comment [PUT]
+
+
++ Request (application/json)
+
+        {
+        "description": "Faut-il ajouter un champ DATE sur l'intervention ?"
+    }
+
+
++ Response 201 (application/json)
+
+    + Headers
+
+            Location: /projects/1/issue/7/comment/5/
+
+    + Body
+    
+        {
+        "description": "Faut-il ajouter un champ DATE sur l'intervention ?"
+    }
+
+
+### Delete Comment [DELETE]
+
+You may delete comment using this action. 
+
++ Response 204 (No Content)
