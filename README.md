@@ -1,6 +1,6 @@
 # Soft-Desk-v2
 ***
-api allowing an application to report and track technical problems (issue tracking system). This solution is aimed at B2B customers. 
+Api allowing an application to report and track technical problems (issue tracking system). This solution is aimed at B2B customers. 
 
 ## Table of Contents
 1. [General Info](#general-info)
